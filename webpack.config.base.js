@@ -46,7 +46,7 @@ module.exports = options => ({
                 modules: false,
               }],
             ],
-            plugins: ['transform-object-rest-spread'],
+            plugins: ['transform-object-rest-spread', 'transform-class-properties'],
           },
         },
       },

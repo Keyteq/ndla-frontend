@@ -17,9 +17,18 @@ import { ArticleShape } from '../../shapes';
 import Article from './components/Article';
 
 class ArticlePage extends Component {
-  componentWillMount() {
-    const { fetchArticle, params: { articleId } } = this.props;
+
+  static mapDispatchToProps = {
+    fetchArticle: actions.fetchArticle,
+  }
+
+  static fetchData(props) {
+    const { fetchArticle, params: { articleId } } = props;
     fetchArticle(articleId);
+  }
+
+  componentDidMount() {
+    ArticlePage.fetchData(this.props);
   }
 
   render() {
@@ -51,9 +60,6 @@ ArticlePage.propTypes = {
   fetchArticle: PropTypes.func.isRequired,
 };
 
-const mapDispatchToProps = {
-  fetchArticle: actions.fetchArticle,
-};
 
 const makeMapStateToProps = (_, ownProps) => {
   const articleId = ownProps.params.articleId;
@@ -65,4 +71,4 @@ const makeMapStateToProps = (_, ownProps) => {
 };
 
 
-export default connect(makeMapStateToProps, mapDispatchToProps)(ArticlePage);
+export default connect(makeMapStateToProps, ArticlePage.mapDispatchToProps)(ArticlePage);

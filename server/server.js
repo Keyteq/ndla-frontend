@@ -11,6 +11,7 @@ import { renderToString } from 'react-dom/server';
 import express from 'express';
 import compression from 'compression';
 import { syncHistoryWithStore } from 'react-router-redux';
+import { bindActionCreators } from 'redux';
 import { Provider } from 'react-redux';
 import { IntlProvider } from 'react-intl';
 import { match, RouterContext } from 'react-router';
@@ -101,6 +102,7 @@ app.get('*', (req, res) => {
   const memoryHistory = createMemoryHistory(req.url, options);
 
   const store = configureStore({ locale }, memoryHistory);
+  const { dispatch } = store;
 
   const history = syncHistoryWithStore(memoryHistory, store);
 
@@ -131,9 +133,18 @@ app.get('*', (req, res) => {
           res.status(500).send(error.message);
         }));
 
-      // Trigger sagas for components by rendering them (should not have any performance implications)
-      // https://github.com/yelouafi/redux-saga/issues/255#issuecomment-210275959
-      renderToString(component);
+      const locals = {
+        params: props.params,
+        dispatch,
+      };
+
+      // Trigger sagas by calling fetchData
+      props.components
+        .filter(comp => comp.fetchData)
+        .forEach(comp => comp.fetchData({
+          ...locals,
+          ...bindActionCreators(comp.mapDispatchToProps, dispatch),
+        }));
 
       // Dispatch a close event so sagas stop listening after they have resolved
       store.close();
