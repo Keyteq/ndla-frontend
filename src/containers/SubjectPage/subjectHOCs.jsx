@@ -15,8 +15,17 @@ import { SubjectShape } from '../../shapes';
 
 export const injectSubjects = (WrappedComponent) => {
   class SubjectsContainer extends Component {
-    componentWillMount() {
-      this.props.fetchSubjects();
+    static mapDispatchToProps = {
+      fetchSubjects: actions.fetchSubjects,
+    }
+
+    static fetchData(props) {
+      const { fetchSubjects } = props;
+      fetchSubjects();
+    }
+
+    componentDidMount() {
+      SubjectsContainer.fetchData(this.props);
     }
 
     render() {
@@ -29,11 +38,6 @@ export const injectSubjects = (WrappedComponent) => {
     fetchSubjects: PropTypes.func.isRequired,
   };
 
-  const mapDispatchToProps = {
-    fetchSubjects: actions.fetchSubjects,
-  };
-
-
   const mapStateToProps = state => ({
     subjects: getSubjects(state),
   });
@@ -43,5 +47,5 @@ export const injectSubjects = (WrappedComponent) => {
 
   SubjectsContainer.displayName = `InjectSubjects(${getDisplayName(WrappedComponent)})`;
 
-  return connect(mapStateToProps, mapDispatchToProps)(SubjectsContainer);
+  return connect(mapStateToProps, SubjectsContainer.mapDispatchToProps)(SubjectsContainer);
 };

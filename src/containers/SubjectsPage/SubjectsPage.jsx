@@ -26,6 +26,6 @@ SubjectsPage.propTypes = {
 };
 
 export default compose(
-  injectT,
   injectSubjects,
+  injectT,
 )(SubjectsPage);

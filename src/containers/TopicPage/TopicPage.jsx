@@ -22,10 +22,20 @@ import { injectT } from '../../i18n';
 import { toTopic } from '../../routes';
 
 class TopicPage extends Component {
-  componentWillMount() {
-    const { params: { subjectId, topicId }, fetchTopicArticle, fetchSubjects } = this.props;
+
+  static mapDispatchToProps = {
+    fetchSubjects: subjectActions.fetchSubjects,
+    fetchTopicArticle: actions.fetchTopicArticle,
+  }
+
+  static fetchData(props) {
+    const { params: { subjectId, topicId }, fetchTopicArticle, fetchSubjects } = props;
     fetchSubjects();
     fetchTopicArticle({ subjectId, topicId });
+  }
+
+  componentDidMount() {
+    TopicPage.fetchData(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -75,11 +85,6 @@ TopicPage.propTypes = {
   article: ArticleShape,
 };
 
-const mapDispatchToProps = {
-  fetchSubjects: subjectActions.fetchSubjects,
-  fetchTopicArticle: actions.fetchTopicArticle,
-};
-
 const mapStateToProps = (state, ownProps) => {
   const { subjectId, topicId } = ownProps.params;
   const getTopicSelector = getTopic(subjectId, topicId);
@@ -95,6 +100,6 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 export default compose(
-  connect(mapStateToProps, mapDispatchToProps),
+  connect(mapStateToProps, TopicPage.mapDispatchToProps),
   injectT,
 )(TopicPage);

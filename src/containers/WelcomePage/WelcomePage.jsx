@@ -26,6 +26,6 @@ WelcomePage.propTypes = {
 };
 
 export default compose(
-  injectT,
   injectSubjects,
+  injectT,
 )(WelcomePage);

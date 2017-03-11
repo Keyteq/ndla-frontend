@@ -20,10 +20,20 @@ import { toTopicPartial } from '../../routes';
 const toTopic = subjectId => toTopicPartial(subjectId);
 
 class SubjectPage extends Component {
-  componentWillMount() {
-    const { params: { subjectId }, fetchTopics, fetchSubjects } = this.props;
+
+  static mapDispatchToProps = {
+    fetchSubjects: actions.fetchSubjects,
+    fetchTopics: topicActions.fetchTopics,
+  }
+
+  static fetchData(props) {
+    const { params: { subjectId }, fetchTopics, fetchSubjects } = props;
     fetchSubjects();
     fetchTopics({ subjectId });
+  }
+
+  componentDidMount() {
+    SubjectPage.fetchData(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -69,11 +79,6 @@ SubjectPage.propTypes = {
   topic: TopicShape,
 };
 
-const mapDispatchToProps = {
-  fetchSubjects: actions.fetchSubjects,
-  fetchTopics: topicActions.fetchTopics,
-};
-
 const mapStateToProps = (state, ownProps) => {
   const { subjectId, topicId } = ownProps.params;
   return {
@@ -83,4 +88,4 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(SubjectPage);
+export default connect(mapStateToProps, SubjectPage.mapDispatchToProps)(SubjectPage);
