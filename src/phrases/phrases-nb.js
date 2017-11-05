@@ -62,6 +62,9 @@ const phrases = {
   resource: {
     errorDescription:
       'Vi beklager, men en feil oppsto under lasting av emne ressurser.',
+    toggleFilterLabel: 'Tilleggsstoff',
+    showLess: 'Vis mindre',
+    showMore: 'Vis mer',
   },
   searchForm: {
     placeholder: 'Søk etter artikler',
@@ -72,10 +75,10 @@ const phrases = {
     },
   },
   article: {
-    author: 'Forfatter',
-    published: 'Publisert',
-    created: 'Opprettet',
+    writtenBy: 'Skrevet av',
     lastUpdated: 'Sist oppdatert',
+    edition: 'Utgave',
+    publisher: 'Utgiver',
     closeLicenseBox: 'Lukk boks',
     openLicenseBox: 'Bruk artikkel',
   },
@@ -84,41 +87,40 @@ const phrases = {
   },
   license: {
     heading: 'Slik gjenbruker du innhold',
+    learnMore: 'Lær mer om åpne lisenser',
+    copyTitle: 'Kopier referanse',
+    hasCopiedTitle: 'Kopiert!',
+    download: 'Last ned',
     tabs: {
-      texts: 'Tekst',
+      text: 'Tekst',
       images: 'Bilder',
-      audios: 'Lydfiler',
+      audio: 'Lyd',
+      video: 'Video',
     },
     images: {
       heading: 'Slik bruker du bilder fra artikkelen',
       description:
         'Husk å kopier teksten som skal legges ved bildet der du bruker det.',
-      learnMore: 'Lær mer om åpne lisenser',
       rules: 'Regler for bruk av bildet:',
-      copyTitle: 'Kopier referanse',
-      hasCopiedTitle: 'Kopiert!',
-      download: 'Last ned',
       source: 'Kilde',
     },
-    texts: {
+    text: {
       heading: 'Slik bruker du tekst fra artikkelen',
       description:
         'Artikkelen kan være satt sammen av flere ulike tekster, som listes opp her.',
-      learnMore: 'Lær mer om åpne lisenser',
       rules: 'Regler for bruk av teksten:',
-      copyTitle: 'Kopier referanse',
-      hasCopiedTitle: 'Kopiert!',
-      download: 'Last ned',
     },
-    audios: {
+    audio: {
       heading: 'Slik bruker du lydfiler',
       description:
         'Husk å kopier teksten som skal legges ved lydfilen der du bruker den.',
-      learnMore: 'Lær mer om åpne lisenser',
       rules: 'Regler for bruk av lydfilen:',
-      copyTitle: 'Kopier referanse',
-      hasCopiedTitle: 'Kopiert!',
-      download: 'Last ned',
+    },
+    video: {
+      heading: 'Slik bruker du video fra artikkelen',
+      description:
+        'Husk å kopier teksten som skal legges ved videoen der du bruker den.',
+      rules: 'Regler for bruk av videoen:',
     },
   },
   breadcrumb: {
@@ -134,7 +136,7 @@ const phrases = {
   footer: {
     aboutNDLA: 'Om NDLA',
     selectLanguage: 'Velg språk (language): ',
-    footerInfo: 'Nettstedet er utarbeidet av NDLA som åpen kildekode.',
+    footerInfo: 'Nettstedet er utarbeidet av NDLA med åpen kildekode.',
     footerEditiorInChief: 'Ansvarlig redaktør: ',
     footerManagingEditor: 'Utgaveansvarlig: ',
   },

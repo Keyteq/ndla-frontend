@@ -12,11 +12,9 @@ import * as sagas from '../resourceSagas';
 import { actions, initalState } from '../resource';
 import { resources, resourceTypes } from './mockResources';
 
-expectSaga.DEFAULT_TIMEOUT = 200;
-
 test('resourceSagas watchFetchTopicResources', () => {
   nock('http://ndla-api')
-    .get('/taxonomy/v1/topics/2/resources/?recursive=true&language=en')
+    .get('/taxonomy/v1/topics/2/resources/?language=en')
     .reply(200, resources);
   nock('http://ndla-api')
     .get('/taxonomy/v1/resource-types/?language=en')

@@ -9,10 +9,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
-import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { OneColumn, ErrorMessage } from 'ndla-ui';
-import { injectT } from 'ndla-i18n';
 import { actions, hasFetchArticleFailed, getArticle } from './article';
 import { getTopicPath, actions as topicActions } from '../TopicPage/topic';
 import {
@@ -21,9 +19,10 @@ import {
 } from '../SubjectPage/subjects';
 import { getLocale } from '../Locale/localeSelectors';
 import { ArticleShape, SubjectShape, TopicShape } from '../../shapes';
-import Article from './components/Article';
+import Article from '../../components/Article';
 import ArticleHero from './components/ArticleHero';
 import config from '../../config';
+import connectSSR from '../../components/connectSSR';
 
 const assets = __CLIENT__ // eslint-disable-line no-nested-ternary
   ? window.assets
@@ -32,14 +31,14 @@ const assets = __CLIENT__ // eslint-disable-line no-nested-ternary
     : require('../../../server/developmentAssets');
 
 class ArticlePage extends Component {
-  componentWillMount() {
+  static getInitialProps(ctx) {
     const {
       history,
       fetchArticle,
       fetchTopics,
       fetchSubjects,
       match: { params },
-    } = this.props;
+    } = ctx;
     const { articleId, subjectId, resourceId } = params;
     fetchArticle({ articleId, resourceId, history });
     if (subjectId) {
@@ -49,6 +48,7 @@ class ArticlePage extends Component {
   }
 
   componentDidMount() {
+    ArticlePage.getInitialProps(this.props);
     if (window.MathJax) {
       window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub]);
     }
@@ -96,7 +96,7 @@ class ArticlePage extends Component {
     if (article.content.indexOf('<math') > -1) {
       scripts.push({
         async: true,
-        src: `https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=/assets/${assets[
+        src: `https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=/assets/${assets[
           'mathjaxConfig.js'
         ]}`,
         type: 'text/javascript',
@@ -118,13 +118,8 @@ class ArticlePage extends Component {
           topicPath={topicPath}
           article={article}
         />
-        <OneColumn cssModifier="narrow">
-          <Article
-            article={article}
-            subject={subject}
-            topicPath={topicPath}
-            locale={locale}
-          />
+        <OneColumn>
+          <Article article={article} locale={locale} />
         </OneColumn>
       </div>
     );
@@ -176,7 +171,6 @@ const makeMapStateToProps = (_, ownProps) => {
   });
 };
 
-export default compose(
-  injectT,
-  connect(makeMapStateToProps, mapDispatchToProps),
-)(ArticlePage);
+export default compose(connectSSR(makeMapStateToProps, mapDispatchToProps))(
+  ArticlePage,
+);
