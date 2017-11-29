@@ -14,9 +14,10 @@
     "lint": "yarn run lint-prettier && eslint --ext .js --ext .jsx src server",
     "lint-prettier": "node prettier.js lint",
     "build-ndla-ui": "cd ../frontend-packages/packages/ndla-ui && npm run prepublish",
+    "build-ndla-licenses": "cd ../frontend-packages/packages/ndla-licenses && npm run prepublish",
     "start":
       "cross-env NODE_ENV=development DISABLE_SSR=true nodemon server --exec babel-node --watch server",
-    "start-with-local-ui": "npm run build-ndla-ui && npm run start",
+    "start-with-local-ui": "npm run build-ndla-ui && npm run build-ndla-licenses && npm run start",
     "start-with-local-converter":
       "cross-env NODE_ENV=development DISABLE_SSR=true LOCAL_ARTICLE_CONVERTER=true nodemon server --exec babel-node --watch server",
     "start-with-ssr":
