@@ -10,7 +10,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { copyTextToClipboard } from 'ndla-util';
 import { Button } from 'ndla-ui';
-import { CopyrightObjectShape } from '../../shapes';
 
 class CopyTextButton extends Component {
   constructor(props) {
@@ -19,35 +18,18 @@ class CopyTextButton extends Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
+  componentWillUnmount() {
+    window.clearTimeout(this.timeout);
+  }
+
   handleClick() {
-    const { copyright, t } = this.props;
-    const license = copyright.license.license;
-    let creatorsCopyString;
-
-    if (copyright.authors) {
-      creatorsCopyString = copyright.authors
-        .map(author => `${author.type}: ${author.name}`)
-        .join('\n');
-    } else {
-      creatorsCopyString = copyright.creators
-        .map(creator => {
-          const type = t(`creditType.${creator.type.toLowerCase()}`);
-          return `${type}: ${creator.name}`;
-        })
-        .join('\n');
-    }
-
-    const licenseCopyString = `${license.toLowerCase().includes('by')
-      ? 'CC '
-      : ''}${license}`.toUpperCase();
-
-    const copyString = `${licenseCopyString} ${creatorsCopyString}`;
-    const success = copyTextToClipboard(copyString);
+    const { stringToCopy } = this.props;
+    const success = copyTextToClipboard(stringToCopy, this.buttonContainer);
 
     if (success) {
       this.setState({ hasCopied: true });
 
-      setTimeout(() => {
+      this.timeout = setTimeout(() => {
         // Reset state after 10 seconds
         this.setState({ hasCopied: false });
       }, 10000);
@@ -58,19 +40,24 @@ class CopyTextButton extends Component {
     const { hasCopied } = this.state;
     const { copyTitle, hasCopiedTitle } = this.props;
     return (
-      <Button
-        outline
-        className="c-licenseToggle__button"
-        disabled={hasCopied}
-        onClick={this.handleClick}>
-        {hasCopied ? hasCopiedTitle : copyTitle}
-      </Button>
+      <span
+        ref={r => {
+          this.buttonContainer = r;
+        }}>
+        <Button
+          outline
+          className="c-licenseToggle__button"
+          disabled={hasCopied}
+          onClick={this.handleClick}>
+          {hasCopied ? hasCopiedTitle : copyTitle}
+        </Button>
+      </span>
     );
   }
 }
 
 CopyTextButton.propTypes = {
-  copyright: CopyrightObjectShape.isRequired,
+  stringToCopy: PropTypes.string.isRequired,
   copyTitle: PropTypes.string.isRequired,
   hasCopiedTitle: PropTypes.string.isRequired,
 };
