@@ -28,14 +28,15 @@ class Resources extends Component {
 
   render() {
     const {
-      match: { params },
+      match: { url },
       t,
       topicResourcesByType,
       fetchTopicResourcesFailed,
     } = this.props;
+    const subjectTopicPath = url.replace('/subjects/', '');
 
     const resourceToLinkProps = resource =>
-      resourceToLinkPropsHelper(resource, params.subjectId, params.topicId);
+      resourceToLinkPropsHelper(resource, subjectTopicPath);
     const topicResourcesByTypeWithMetaData = topicResourcesByType.map(type => ({
       ...type,
       meta: getResourceTypeMetaData([type]),
@@ -55,6 +56,11 @@ class Resources extends Component {
             className={type.meta.resourceListClassName}
             icon={type.meta.icon}
             messages={{
+              noCoreResourcesAvailable: t('resource.noCoreResourcesAvailable'),
+              activateSuggestion: t('resource.activateSuggestion'),
+              activateAdditionalResources: t(
+                'resource.activateAdditionalResources',
+              ),
               toggleFilterLabel: t('resource.toggleFilterLabel'),
               showLess: t('resource.showLess'),
               showMore: t('resource.showMore'),

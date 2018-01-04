@@ -22,19 +22,18 @@ import { getLocale } from '../Locale/localeSelectors';
 import { ArticleShape, SubjectShape, TopicShape } from '../../shapes';
 import Article from '../../components/Article';
 import ArticleHero from './components/ArticleHero';
-import config from '../../config';
 import connectSSR from '../../components/connectSSR';
-
-const assets = __CLIENT__ // eslint-disable-line no-nested-ternary
-  ? window.assets
-  : config.isProduction
-    ? require('../../../assets/assets') // eslint-disable-line import/no-unresolved
-    : require('../../../server/developmentAssets');
+import { getArticleScripts } from '../../util/getArticleScripts';
+import getStructuredDataFromArticle from '../../util/getStructuredDataFromArticle';
 
 class ArticlePage extends Component {
   static getInitialProps(ctx) {
     const { fetchArticle, fetchTopics, fetchSubjects, match: { params } } = ctx;
-    const { articleId, subjectId, resourceId } = params;
+    const { articleId, subjectId, plainResourceId } = params;
+    const resourceId = plainResourceId
+      ? `urn:resource:${plainResourceId}`
+      : undefined;
+
     fetchArticle({ articleId, resourceId });
     if (subjectId) {
       fetchSubjects();
@@ -85,32 +84,29 @@ class ArticlePage extends Component {
       return null;
     }
 
-    const scripts = article.requiredLibraries
-      ? article.requiredLibraries.map(lib => ({
-          src: lib.url,
-          type: lib.mediaType,
-        }))
-      : [];
-    if (article.content.indexOf('<math') > -1) {
-      scripts.push({
-        async: true,
-        src: `https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=/assets/${
-          assets['mathjaxConfig.js']
-        }`,
-        type: 'text/javascript',
-      });
-    }
+    const scripts = getArticleScripts(article);
 
-    const metaDescription = article.metaDescription
-      ? { name: 'description', content: article.metaDescription }
-      : {};
     return (
       <div>
-        <Helmet
-          title={`NDLA | ${article.title}`}
-          meta={[metaDescription]}
-          script={scripts}
-        />
+        <Helmet>
+          <title>{`NDLA | ${article.title}`}</title>
+          {article.metaDescription && (
+            <meta name="description" content={article.metaDescription} />
+          )}
+
+          {scripts.map(script => (
+            <script
+              key={script.src}
+              src={script.src}
+              type={script.type}
+              async={script.async}
+            />
+          ))}
+
+          <script type="application/ld+json">
+            {JSON.stringify(getStructuredDataFromArticle(article))}
+          </script>
+        </Helmet>
         <ArticleHero
           subject={subject}
           topicPath={topicPath}
