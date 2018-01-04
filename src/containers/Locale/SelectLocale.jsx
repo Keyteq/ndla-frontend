@@ -15,7 +15,7 @@ import createHistory from 'history/createBrowserHistory';
 import { appLocales } from '../../i18n';
 import { getLocale } from './localeSelectors';
 
-const SelectLocale = ({ locale, location: { pathname, search } }) => {
+const SelectLocale = ({ locale, location: { pathname, search }, id }) => {
   const handleChange = newLocale => {
     const path = pathname.startsWith('/') ? pathname.substring(1) : pathname;
     createHistory().push(`/${newLocale}/${path}${search}`); // Need create new history or else basename is included
@@ -23,12 +23,14 @@ const SelectLocale = ({ locale, location: { pathname, search } }) => {
   };
   return (
     <select
+      id={id}
       onChange={evt => {
         handleChange(evt.target.value);
       }}
       // autoComplete="off" is need to make the selected attribute work in firefox
       autoComplete="off"
-      value={locale}>
+      value={locale}
+    >
       {appLocales.map(l => (
         <option key={l.abbreviation} value={l.abbreviation}>
           {l.name}
@@ -39,6 +41,7 @@ const SelectLocale = ({ locale, location: { pathname, search } }) => {
 };
 
 SelectLocale.propTypes = {
+  id: PropTypes.string.isRequired,
   locale: PropTypes.string.isRequired,
   location: PropTypes.shape({
     pathname: PropTypes.string.isRequired,
