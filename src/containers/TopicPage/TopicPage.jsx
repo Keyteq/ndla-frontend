@@ -6,10 +6,10 @@
  *
  */
 
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
-import { Hero, OneColumn, Breadcrumb, LayoutItem } from 'ndla-ui';
+import { SubjectHero, OneColumn, Breadcrumb, constants } from 'ndla-ui';
 import Helmet from 'react-helmet';
 import { injectT } from 'ndla-i18n';
 import connectSSR from '../../components/connectSSR';
@@ -118,7 +118,7 @@ class TopicPage extends Component {
             {JSON.stringify(getStructuredDataFromArticle(article))}
           </script>
         </Helmet>
-        <Hero>
+        <SubjectHero>
           <OneColumn>
             <div className="c-hero__content">
               <section>
@@ -134,7 +134,7 @@ class TopicPage extends Component {
               </section>
             </div>
           </OneColumn>
-        </Hero>
+        </SubjectHero>
         {(fetchTopicsStatus === 'error' ||
           fetchTopicArticleStatus === 'error') && (
           <TopicPageErrorMessage
@@ -143,12 +143,13 @@ class TopicPage extends Component {
           />
         )}
         <OneColumn>
-          {article ? <Article article={article} locale={locale} /> : null}
-        </OneColumn>
-        {topic ? (
-          <OneColumn>
-            <LayoutItem layout="extend">
-              <OneColumn cssModifier="narrow">
+          <Article
+            article={article}
+            locale={locale}
+            label={t('topicPage.topic')}
+            contentType={constants.contentTypes.SUBJECT}>
+            {topic ? (
+              <Fragment>
                 <SubTopics
                   subjectId={subjectId}
                   topic={topic}
@@ -156,13 +157,13 @@ class TopicPage extends Component {
                 />
                 <TopicResources
                   subjectId={subjectId}
-                  topic={topic}
+                  topicId={topic.id}
                   topicPath={topicPath}
                 />
-              </OneColumn>
-            </LayoutItem>
-          </OneColumn>
-        ) : null}
+              </Fragment>
+            ) : null}
+          </Article>
+        </OneColumn>
       </div>
     );
   }

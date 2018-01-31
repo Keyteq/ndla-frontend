@@ -21,10 +21,26 @@ import {
 import { getLocale } from '../Locale/localeSelectors';
 import { ArticleShape, SubjectShape, TopicShape } from '../../shapes';
 import Article from '../../components/Article';
+import TopicResources from '../TopicPage/TopicResources';
 import ArticleHero from './components/ArticleHero';
 import connectSSR from '../../components/connectSSR';
 import { getArticleScripts } from '../../util/getArticleScripts';
 import getStructuredDataFromArticle from '../../util/getStructuredDataFromArticle';
+import getContentTypeFromResourceTypes from '../../components/getContentTypeFromResourceTypes';
+
+const getTitle = article => (article ? article.title : '');
+
+const getArticleProps = article => {
+  const hasResourceTypes =
+    article && article.resourceTypes && article.resourceTypes.length > 0;
+
+  const contentType = hasResourceTypes
+    ? getContentTypeFromResourceTypes(article.resourceTypes).contentType
+    : undefined;
+
+  const label = hasResourceTypes ? article.resourceTypes[0].name : '';
+  return { contentType, label };
+};
 
 class ArticlePage extends Component {
   static getInitialProps(ctx) {
@@ -48,6 +64,15 @@ class ArticlePage extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { match: { params } } = this.props;
+    const { articleId } = params;
+
+    if (nextProps.match.params.articleId !== articleId) {
+      ArticlePage.getInitialProps(nextProps);
+    }
+  }
+
   componentDidUpdate() {
     if (window.MathJax) {
       window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub]);
@@ -55,7 +80,16 @@ class ArticlePage extends Component {
   }
 
   render() {
-    const { article, subject, status, topicPath, locale, t } = this.props;
+    const {
+      article,
+      subject,
+      status,
+      topicPath,
+      match: { params },
+      locale,
+      t,
+    } = this.props;
+    const { topicId } = params;
 
     if (status === 'error' || status === 'error404') {
       return (
@@ -74,14 +108,14 @@ class ArticlePage extends Component {
                   goToFrontPage: t('errorMessage.goToFrontPage'),
                 }}
               />
+              {subject &&
+                topicId && (
+                  <TopicResources subjectId={subject.id} topicId={topicId} />
+                )}
             </article>
           </OneColumn>
         </div>
       );
-    }
-
-    if (!article) {
-      return null;
     }
 
     const scripts = getArticleScripts(article);
@@ -89,10 +123,11 @@ class ArticlePage extends Component {
     return (
       <div>
         <Helmet>
-          <title>{`NDLA | ${article.title}`}</title>
-          {article.metaDescription && (
-            <meta name="description" content={article.metaDescription} />
-          )}
+          <title>{`NDLA | ${getTitle(article)}`}</title>
+          {article &&
+            article.metaDescription && (
+              <meta name="description" content={article.metaDescription} />
+            )}
 
           {scripts.map(script => (
             <script
@@ -107,13 +142,23 @@ class ArticlePage extends Component {
             {JSON.stringify(getStructuredDataFromArticle(article))}
           </script>
         </Helmet>
-        <ArticleHero
-          subject={subject}
-          topicPath={topicPath}
-          article={article}
-        />
+        {article && (
+          <ArticleHero
+            subject={subject}
+            topicPath={topicPath}
+            article={article}
+          />
+        )}
         <OneColumn>
-          <Article article={article} locale={locale} />
+          <Article
+            article={article}
+            locale={locale}
+            {...getArticleProps(article)}>
+            {subject &&
+              topicId && (
+                <TopicResources subjectId={subject.id} topicId={topicId} />
+              )}
+          </Article>
         </OneColumn>
       </div>
     );
@@ -145,24 +190,23 @@ const mapDispatchToProps = {
   fetchTopics: topicActions.fetchTopics,
 };
 
-const makeMapStateToProps = (_, ownProps) => {
+const mapStateToProps = (state, ownProps) => {
   const { articleId, subjectId, topicId } = ownProps.match.params;
-  const getArticleSelector = getArticle(articleId);
   const getTopicPathSelector =
     subjectId && topicId ? getTopicPath(subjectId, topicId) : () => undefined;
   const getSubjectByIdSelector = subjectId
     ? getSubjectById(subjectId)
     : () => undefined;
-  return state => ({
-    article: getArticleSelector(state),
+  return {
+    article: getArticle(articleId)(state),
     status: getFetchStatus(state),
     topicPath: getTopicPathSelector(state),
     subject: getSubjectByIdSelector(state),
     locale: getLocale(state),
-  });
+  };
 };
 
 export default compose(
-  connectSSR(makeMapStateToProps, mapDispatchToProps),
+  connectSSR(mapStateToProps, mapDispatchToProps),
   injectT,
 )(ArticlePage);

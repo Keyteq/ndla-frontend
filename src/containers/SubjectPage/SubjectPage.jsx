@@ -9,7 +9,13 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
-import { OneColumn, Hero, ErrorMessage, TopicIntroductionList } from 'ndla-ui';
+import {
+  OneColumn,
+  SubjectHero,
+  ErrorMessage,
+  TopicIntroductionList,
+  FilterList,
+} from 'ndla-ui';
 import Link from 'react-router-dom/Link';
 import defined from 'defined';
 import { injectT } from 'ndla-i18n';
@@ -22,6 +28,11 @@ import {
   getTopic,
   getFetchTopicsStatus,
 } from '../TopicPage/topic';
+import {
+  actions as filterActions,
+  getActiveFilter,
+  getFilters,
+} from '../Filters/filter';
 import { SubjectShape, TopicShape } from '../../shapes';
 import { toTopicPartial } from '../../routeHelpers';
 
@@ -33,8 +44,10 @@ class SubjectPage extends Component {
       match: { params: { subjectId } },
       fetchTopicsWithIntroductions,
       fetchSubjects,
+      fetchSubjectFilters,
     } = ctx;
     fetchSubjects();
+    fetchSubjectFilters(subjectId);
     fetchTopicsWithIntroductions({ subjectId });
   }
 
@@ -55,14 +68,32 @@ class SubjectPage extends Component {
     }
   }
 
+  handleFilterClick = e => {
+    const {
+      match: { params: { subjectId } },
+      filters,
+      setActiveFilter,
+    } = this.props;
+    const filterId = filters.find(it => it.name === e.target.id).id;
+    setActiveFilter({ filterId, subjectId });
+  };
+
   render() {
-    const { subjectTopics, t, topic, match, hasFailed } = this.props;
+    const {
+      subjectTopics,
+      t,
+      topic,
+      match,
+      hasFailed,
+      filters,
+      activeFilters,
+    } = this.props;
     const { params: { subjectId } } = match;
 
     const topics = topic ? defined(topic.subtopics, []) : subjectTopics;
     return (
       <div>
-        <Hero>
+        <SubjectHero>
           <OneColumn cssModifier="narrow">
             <div className="c-hero__content">
               <section>
@@ -76,10 +107,18 @@ class SubjectPage extends Component {
               </section>
             </div>
           </OneColumn>
-        </Hero>
+        </SubjectHero>
         <OneColumn>
           <article className="c-article">
             <section className="u-4/6@desktop u-push-1/6@desktop">
+              <FilterList
+                filterContent={filters.map(filt => ({
+                  ...filt,
+                  title: filt.name,
+                  active: !!activeFilters.find(actId => actId === filt.id),
+                }))}
+                onClick={this.handleFilterClick}
+              />
               {hasFailed ? (
                 <ErrorMessage
                   messages={{
@@ -96,7 +135,17 @@ class SubjectPage extends Component {
                   </h1>
                   <TopicIntroductionList
                     toTopic={toTopic(subjectId)}
-                    topics={topics}
+                    topics={
+                      activeFilters.length === 0
+                        ? topics
+                        : topics.filter(
+                            top =>
+                              top.filter &&
+                              !activeFilters.find(
+                                active => top.filter.indexOf(active) === -1,
+                              ),
+                          )
+                    }
                   />
                 </div>
               )}
@@ -121,11 +170,16 @@ SubjectPage.propTypes = {
   subjectTopics: PropTypes.arrayOf(TopicShape).isRequired,
   subject: SubjectShape,
   topic: TopicShape,
+  filters: PropTypes.arrayOf(PropTypes.object),
+  setActiveFilter: PropTypes.func,
+  activeFilters: PropTypes.arrayOf(PropTypes.string),
 };
 
 const mapDispatchToProps = {
   fetchSubjects: actions.fetchSubjects,
+  fetchSubjectFilters: filterActions.fetchSubjectFilters,
   fetchTopicsWithIntroductions: topicActions.fetchTopicsWithIntroductions,
+  setActiveFilter: filterActions.setActive,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -134,6 +188,8 @@ const mapStateToProps = (state, ownProps) => {
     topic: topicId ? getTopic(subjectId, topicId)(state) : undefined,
     subjectTopics: getTopicsBySubjectIdWithIntroduction(subjectId)(state),
     hasFailed: getFetchTopicsStatus(state) === 'error',
+    filters: getFilters(subjectId)(state),
+    activeFilters: getActiveFilter(subjectId)(state) || [],
   };
 };
 

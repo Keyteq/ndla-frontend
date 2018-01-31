@@ -9,18 +9,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Article as UIArticle, ToggleLicenseBox } from 'ndla-ui';
+import {
+  Article as UIArticle,
+  ContentTypeBadge,
+  ToggleLicenseBox,
+} from 'ndla-ui';
 import { injectT } from 'ndla-i18n';
 import LicenseBox from './license/LicenseBox';
-import getResourceTypeMetaData from './getResourceTypeMetaData';
+import { ArticleShape } from '../shapes';
 
-const Article = ({ article, locale, t }) => {
-  const hasResourceTypes =
-    article.resourceTypes && article.resourceTypes.length > 0;
+const Article = ({ article, children, contentType, label, locale, t }) => {
+  if (!article) {
+    return children || null;
+  }
 
-  const icon = hasResourceTypes
-    ? getResourceTypeMetaData(article.resourceTypes).icon
-    : undefined;
+  const icon = contentType ? (
+    <ContentTypeBadge type={contentType} background size="large" />
+  ) : null;
 
   return (
     <UIArticle
@@ -39,7 +44,9 @@ const Article = ({ article, locale, t }) => {
         lastUpdated: t('lastUpdated'),
         edition: t('edition'),
         publisher: t('publisher'),
+        label,
       }}>
+      {children}
       <a
         className="article-old-ndla-link"
         rel="noopener noreferrer"
@@ -52,14 +59,10 @@ const Article = ({ article, locale, t }) => {
 };
 
 Article.propTypes = {
-  article: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    copyright: PropTypes.shape({
-      authors: PropTypes.array,
-      creators: PropTypes.array,
-    }).isRequired,
-  }).isRequired,
+  article: ArticleShape,
+  children: PropTypes.node,
+  contentType: PropTypes.string,
+  label: PropTypes.string.isRequired,
   locale: PropTypes.string.isRequired,
 };
 
