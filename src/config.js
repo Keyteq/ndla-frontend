@@ -6,19 +6,16 @@
  *
  */
 
-const environment = {
-  development: {
-    isProduction: false,
-  },
-  production: {
-    isProduction: true,
-  },
-}[process.env.NODE_ENV || 'development'];
+export const getEnvironmentVariabel = (key, fallback = undefined) => {
+  const env = 'env';
+  const variabel = process[env][key]; // Hack to prevent DefinePlugin replacing process.env
+  return variabel || fallback;
+};
 
-const ndlaEnvironment = process.env.NDLA_ENVIRONMENT || 'test';
+const ndlaEnvironment = getEnvironmentVariabel('NDLA_ENVIRONMENT', 'test');
 
 const apiDomain = () => {
-  switch (process.env.NDLA_ENVIRONMENT) {
+  switch (ndlaEnvironment) {
     case 'local':
       return 'http://api-gateway.ndla-local';
     case 'prod':
@@ -29,41 +26,55 @@ const apiDomain = () => {
 };
 
 const ndlaFrontendDomain = () => {
-  switch (process.env.NDLA_ENVIRONMENT) {
+  switch (ndlaEnvironment) {
     case 'local':
       return 'http://localhost:30017';
     case 'prod':
-      return 'https://ndla-frontend.api.ndla.no';
+      return 'https://beta.ndla.no';
     default:
       return `https://ndla-frontend.${ndlaEnvironment}.api.ndla.no`;
   }
 };
 
 const learningPathDomain = () => {
-  switch (process.env.NDLA_ENVIRONMENT) {
+  switch (ndlaEnvironment) {
     case 'local':
       return 'http://localhost:30007';
     case 'prod':
-      return 'http://learningpath-frontend.api.ndla.no';
+      return 'https://beta.sti.ndla.no';
     default:
-      return `http://learningpath-frontend.${ndlaEnvironment}.api.ndla.no`;
+      return `https://learningpath-frontend.${ndlaEnvironment}.api.ndla.no`;
   }
 };
 
-module.exports = Object.assign(
-  {
-    componentName: process.env.npm_package_name,
-    host: process.env.NDLA_FRONTENTD_HOST || 'localhost',
-    port: process.env.NDLA_FRONTENTD_PORT || '3000',
-    redirectPort: process.env.NDLA_REDIRECT_PORT || '3001',
-    googleTagMangerId: process.env.GOOGLE_TAG_MANGER_ID || undefined,
-    logEnvironment: process.env.NDLA_ENVIRONMENT || 'local',
-    logglyApiKey: process.env.LOGGLY_API_KEY,
-    disableSSR: process.env.DISABLE_SSR || false,
-    searchEnabled: ndlaEnvironment !== 'prod',
-    ndlaApiUrl: process.env.NDLA_API_URL || apiDomain(),
-    ndlaFrontendDomain: ndlaFrontendDomain(),
-    learningPathDomain: learningPathDomain(),
-  },
-  environment,
-);
+const config = {
+  componentName: 'ndla-frontend',
+  host: getEnvironmentVariabel('NDLA_FRONTEND_HOST', 'localhost'),
+  port: getEnvironmentVariabel('NDLA_FRONTEND_PORT', '3000'),
+  redirectPort: getEnvironmentVariabel('NDLA_REDIRECT_PORT', '3001'),
+  logEnvironment: getEnvironmentVariabel('NDLA_ENVIRONMENT', 'local'),
+  logglyApiKey: getEnvironmentVariabel('LOGGLY_API_KEY'),
+  disableSSR: getEnvironmentVariabel('RAZZLE_DISABLE_SSR', false),
+  isNdlaProdEnvironment: ndlaEnvironment === 'prod',
+  ndlaApiUrl: getEnvironmentVariabel('NDLA_API_URL', apiDomain()),
+  ndlaFrontendDomain: ndlaFrontendDomain(),
+  learningPathDomain: learningPathDomain(),
+  googleTagManagerId: getEnvironmentVariabel('NDLA_GOOGLE_TAG_MANAGER_ID'),
+  gaTrackingId: getEnvironmentVariabel('NDLA_FRONTEND_GA_TRACKING_ID'),
+  zendeskHost: getEnvironmentVariabel('NDLA_ZENDESK_HOST'),
+  localGraphQLApi: getEnvironmentVariabel('LOCAL_GRAPHQL_API', false),
+  showAllFrontpageSubjects: true,
+  oldNdlaProxyUrl: getEnvironmentVariabel(
+    'OLD_NDLA_PROXY_URL',
+    'https://ndla.no',
+  ),
+};
+
+export function getUniversalConfig() {
+  return process.env.BUILD_TARGET === 'server' ||
+    process.env.NODE_ENV === 'unittest'
+    ? config
+    : window.DATA.config;
+}
+
+export default getUniversalConfig();

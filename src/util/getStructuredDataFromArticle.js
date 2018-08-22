@@ -6,8 +6,6 @@
  *
  */
 
-import defined from 'defined';
-
 const CREATIVE_WORK_TYPE = 'CreativeWork';
 const PERSON_TYPE = 'Person';
 const ORGANIZATION_TYPE = 'Organization';
@@ -19,13 +17,13 @@ const getStructuredDataBase = () => ({
   '@context': 'http://schema.org',
 });
 
-const getCopyrightData = copyright => {
+const getCopyrightData = ({ creators, rightsholders, license, processors }) => {
   const data = {
-    license: copyright.license.url,
+    license: license.url,
   };
 
   // can only be one since it is a person or a organization
-  const author = copyright.creators[0];
+  const author = creators.length > 0 ? creators[0] : rightsholders[0];
 
   if (author) {
     data.author = {
@@ -35,7 +33,7 @@ const getCopyrightData = copyright => {
   }
 
   // can only be one since it is a person or a organization
-  const copyrightHolder = copyright.rightsholders[0];
+  const copyrightHolder = rightsholders[0];
 
   if (copyrightHolder) {
     data.copyrightHolder = {
@@ -45,7 +43,7 @@ const getCopyrightData = copyright => {
   }
 
   // can only be one since it is a person or a organization
-  const contributor = copyright.processors[0];
+  const contributor = processors[0];
 
   if (contributor) {
     data.contributor = {
@@ -73,7 +71,7 @@ const getStructuredDataFromArticle = article => {
 
   const mediaElements = [];
 
-  const images = defined(article.metaData.images, []);
+  const images = article.metaData.images || [];
   images.forEach(image => {
     mediaElements.push({
       data: image,
@@ -81,7 +79,7 @@ const getStructuredDataFromArticle = article => {
     });
   });
 
-  const audios = defined(article.metaData.audios, []);
+  const audios = article.metaData.audios || [];
   audios.forEach(audio => {
     mediaElements.push({
       data: audio,
@@ -89,7 +87,7 @@ const getStructuredDataFromArticle = article => {
     });
   });
 
-  const videos = defined(article.metaData.brightcoves, []);
+  const videos = article.metaData.brightcoves || [];
 
   videos.forEach(video => {
     mediaElements.push({

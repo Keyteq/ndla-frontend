@@ -20,9 +20,9 @@ export const ArticleShape = PropTypes.shape({
 
 export const ArticleResultShape = PropTypes.shape({
   id: PropTypes.number.isRequired,
-  title: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-  }).isRequired,
+  title: PropTypes.string.isRequired,
+  ingress: PropTypes.string.isRequired,
+  contentType: PropTypes.string.isRequired,
 });
 
 export const SubjectShape = PropTypes.shape({
@@ -40,6 +40,7 @@ export const ResourceShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   contentUri: PropTypes.string,
+  path: PropTypes.string.isRequired,
 });
 
 export const ResourceTypeShape = PropTypes.shape({
@@ -89,3 +90,16 @@ export const FootNoteShape = PropTypes.shape({
   edition: PropTypes.string.isRequired,
   publisher: PropTypes.string.isRequired,
 });
+
+export const FilterShape = PropTypes.shape({
+  title: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  subjectId: PropTypes.string.isRequired,
+});
+
+export const LocationShape = PropTypes.shape({
+  search: PropTypes.string,
+  pathname: PropTypes.string.isRequired,
+}).isRequired;

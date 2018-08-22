@@ -7,6 +7,7 @@
  */
 
 import nb from './phrases/phrases-nb';
+import nn from './phrases/phrases-nn';
 import en from './phrases/phrases-en';
 
 function* entries(obj) {
@@ -45,7 +46,7 @@ const NB = {
 const NN = {
   name: 'Nynorsk',
   abbreviation: 'nn',
-  messages: formatNestedMessages(nb),
+  messages: formatNestedMessages(nn),
 };
 const EN = {
   name: 'English',
@@ -54,7 +55,7 @@ const EN = {
 };
 
 export const appLocales = [NB, NN, EN];
-export const preferdLocales = [NB, NN, EN];
+export const preferredLocales = [NB, NN, EN];
 
 export const getLocaleObject = localeAbbreviation => {
   const locale = appLocales.find(l => l.abbreviation === localeAbbreviation);
@@ -69,3 +70,14 @@ export const getHtmlLang = localeAbbreviation => {
   const locale = appLocales.find(l => l.abbreviation === localeAbbreviation);
   return locale ? locale.abbreviation : 'nb'; // Defaults to nb if not found
 };
+
+export function getLocaleInfoFromPath(path) {
+  const paths = path.split('/');
+  const basename = isValidLocale(paths[1]) ? paths[1] : '';
+  const basepath = basename ? path.replace(`/${basename}`, '') : path;
+  return {
+    basepath,
+    basename,
+    ...getLocaleObject(basename),
+  };
+}

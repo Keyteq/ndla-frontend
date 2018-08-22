@@ -7,11 +7,22 @@
  */
 
 import defined from 'defined';
+import { ApolloClient } from 'apollo-client';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { BatchHttpLink } from 'apollo-link-batch-http';
+import { onError } from 'apollo-link-error';
+import { ApolloLink } from 'apollo-link';
+import { setContext } from 'apollo-link-context';
 import config from '../config';
 import { expiresIn } from './jwtHelper';
+import handleError from './handleError';
 
-const NDLA_API_URL = __SERVER__ ? config.ndlaApiUrl : window.config.ndlaApiUrl;
-const fetch = __SERVER__ ? require('node-fetch') : window.fetch;
+const __SERVER__ = process.env.BUILD_TARGET === 'server'; //eslint-disable-line
+const __CLIENT__ = process.env.BUILD_TARGET === 'client'; //eslint-disable-line
+
+const NDLA_API_URL = __SERVER__
+  ? config.ndlaApiUrl
+  : window.DATA.config.ndlaApiUrl;
 
 const apiBaseUrl = (() => {
   if (process.env.NODE_ENV === 'unittest') {
@@ -78,7 +89,8 @@ export const getAccessToken = () => {
 const getAccessTokenExpiresAt = () => {
   if (__CLIENT__) {
     return JSON.parse(localStorage.getItem('access_token_expires_at'));
-  } else if (__SERVER__) {
+  }
+  if (__SERVER__) {
     return global.access_token;
   }
   return 0;
@@ -105,4 +117,63 @@ export const fetchWithAccessToken = (url, options = {}) => {
     ...options,
     headers: { Authorization: `Bearer ${accessToken}` },
   });
+};
+
+export const getOrFetchAccessToken = () => {
+  const accessToken = getAccessToken();
+  const expiresAt = accessToken ? getAccessTokenExpiresAt() : 0;
+
+  if (__CLIENT__ && new Date().getTime() > expiresAt) {
+    return fetchAccessToken().then(res => {
+      setAccessTokenInLocalStorage(res.access_token);
+      return res.access_token;
+    });
+  }
+
+  return accessToken;
+};
+
+const uri = (() => {
+  if (config.localGraphQLApi) {
+    return 'http://localhost:4000/graphql-api/graphql';
+  }
+  return apiResourceUrl('/graphql-api/graphql');
+})();
+
+export const createApolloClient = (language = 'nb') => {
+  const authLink = setContext(async (_, { headers }) => {
+    const accessToken = await getOrFetchAccessToken();
+    return {
+      headers: {
+        ...headers,
+        Authorization: `Bearer ${accessToken}`,
+        'Accept-Language': language,
+      },
+    };
+  });
+
+  const cache = __CLIENT__
+    ? new InMemoryCache().restore(window.DATA.apolloState)
+    : new InMemoryCache();
+
+  const client = new ApolloClient({
+    link: ApolloLink.from([
+      onError(({ graphQLErrors, networkError }) => {
+        if (graphQLErrors)
+          graphQLErrors.map(({ message, locations, path }) =>
+            handleError(
+              `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+            ),
+          );
+        if (networkError) handleError(`[Network error]: ${networkError}`);
+      }),
+      authLink,
+      new BatchHttpLink({
+        uri,
+      }),
+    ]),
+    cache,
+  });
+
+  return client;
 };

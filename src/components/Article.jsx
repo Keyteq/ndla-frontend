@@ -9,16 +9,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Article as UIArticle,
-  ContentTypeBadge,
-  ToggleLicenseBox,
-} from 'ndla-ui';
+import { Article as UIArticle, ContentTypeBadge } from 'ndla-ui';
 import { injectT } from 'ndla-i18n';
 import LicenseBox from './license/LicenseBox';
 import { ArticleShape } from '../shapes';
+import config from '../config';
 
-const Article = ({ article, children, contentType, label, locale, t }) => {
+const Article = ({
+  article,
+  children,
+  contentType,
+  label,
+  locale,
+  t,
+  ...rest
+}) => {
   if (!article) {
     return children || null;
   }
@@ -26,34 +31,33 @@ const Article = ({ article, children, contentType, label, locale, t }) => {
   const icon = contentType ? (
     <ContentTypeBadge type={contentType} background size="large" />
   ) : null;
-
   return (
     <UIArticle
       article={article}
       icon={icon}
-      licenseBox={
-        <ToggleLicenseBox
-          article={article}
-          locale={locale}
-          openTitle={t('openLicenseBox')}
-          closeTitle={t('closeLicenseBox')}>
-          <LicenseBox article={article} locale={locale} />
-        </ToggleLicenseBox>
-      }
+      licenseBox={<LicenseBox article={article} locale={locale} />}
       messages={{
-        lastUpdated: t('lastUpdated'),
-        edition: t('edition'),
-        publisher: t('publisher'),
+        lastUpdated: t('article.lastUpdated'),
+        edition: t('article.edition'),
+        publisher: t('article.publisher'),
         label,
-      }}>
+        useContent: t('article.useContent'),
+        closeLabel: t('article.closeLabel'),
+        additionalLabel: t('article.additionalLabel'),
+        authorLabel: t('license.creditType.originator'),
+        authorDescription: t('license.creditType.authorDesc'),
+      }}
+      {...rest}>
       {children}
-      <a
-        className="article-old-ndla-link"
-        rel="noopener noreferrer"
-        target="_blank"
-        href={article.oldNdlaUrl}>
-        Gå til orginal artikkel
-      </a>
+      {!config.isNdlaProdEnvironment && (
+        <a
+          className="article-old-ndla-link"
+          rel="noopener noreferrer"
+          target="_blank"
+          href={article.oldNdlaUrl}>
+          Gå til orginal artikkel
+        </a>
+      )}
     </UIArticle>
   );
 };
@@ -66,4 +70,4 @@ Article.propTypes = {
   locale: PropTypes.string.isRequired,
 };
 
-export default injectT(Article, 'article.');
+export default injectT(Article);

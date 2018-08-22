@@ -1,10 +1,15 @@
 node_modules
 npm-debug.log
+yarn-error.log
 .DS_Store
+/.eslintcache/
 *.iml
 /.idea
-/htdocs/
+/build/
 /coverage/
+/build/
+/e2e/screenshots
+/htdocs/
 
 ### VisualStudioCode ###
 .vscode/*

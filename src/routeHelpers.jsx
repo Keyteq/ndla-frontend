@@ -6,32 +6,93 @@
  *
  */
 
+import config from './config';
+
 export function toSearch() {
   return '/search';
 }
 
-export function toArticle(articleId, resource) {
-  if (resource) {
-    const resourcePath = resource.path
-      .split('/')
-      .filter(part => part !== '')
-      .map(part => `urn:${part}`)
-      .join('/');
-    return `/article/${resourcePath}/${articleId}`;
+const removeUrn = string => string.replace('urn:', '');
+
+export function getUrnIdsFromProps(props) {
+  const {
+    match: { params },
+  } = props;
+  return {
+    subjectId: params.subjectId ? `urn:${params.subjectId}` : undefined,
+    topicId: params.topicId ? `urn:${params.topicId}` : undefined,
+    resourceId: params.resourceId
+      ? `urn:resource:${params.resourceId}`
+      : undefined,
+    articleId: params.articleId,
+  };
+}
+
+export function toSubjects() {
+  return `/subjects`;
+}
+
+export function toLearningPath(id) {
+  return `${config.learningPathDomain}/learningpaths/${id}/first-step`;
+}
+export function toArticle(articleId, resource, subjectTopicPath, filters = '') {
+  const filterParams = filters.length > 0 ? `?filters=${filters}` : '';
+  if (subjectTopicPath) {
+    return `${toSubjects()}${subjectTopicPath}/${removeUrn(
+      resource.id,
+    )}${filterParams}`;
   }
-  return `/article/${articleId}`;
+  if (resource) {
+    return `${toSubjects()}${resource.path}/${filterParams}`;
+  }
+  return `/article/${articleId}${filterParams}`;
 }
 
 export function toSubject(subjectId) {
-  return `/subjects/${subjectId}`;
+  return `${toSubjects()}/${removeUrn(subjectId)}`;
 }
 
-export function toTopic(subjectId, ...topicIds) {
+export function toTopic(subjectId, filters, ...topicIds) {
+  const urnFreeSubjectId = removeUrn(subjectId);
   if (topicIds.length === 0) {
-    return toSubject(subjectId);
+    return toSubject(urnFreeSubjectId);
   }
-  return `/subjects/${subjectId}/${topicIds.join('/')}`;
+  const urnFreeTopicIds = topicIds.filter(id => !!id).map(removeUrn);
+  const filterParam =
+    filters && filters.length > 0 ? `?filters=${filters}` : '';
+  const t = `${toSubjects()}/${urnFreeSubjectId}/${urnFreeTopicIds.join(
+    '/',
+  )}${filterParam}`;
+  return t;
 }
 
-export const toTopicPartial = (subjectId, ...topicIds) => topicId =>
-  toTopic(subjectId, ...topicIds, topicId);
+export const toTopicPartial = (
+  subjectId,
+  filters = '',
+  ...topicIds
+) => topicId => toTopic(subjectId, filters, ...topicIds, topicId);
+
+export function toBreadcrumbItems(
+  rootName,
+  subject,
+  topicPath = [],
+  resource,
+  filters = '',
+) {
+  const filterParam = filters.length > 0 ? `?filters=${filters}` : '';
+  const topicLinks = topicPath.map(topic => ({
+    to: toSubjects() + topic.path + filterParam,
+    name: topic.name,
+  }));
+
+  const resourceLink = resource
+    ? [{ to: toSubjects() + resource.path + filterParam, name: resource.name }]
+    : [];
+
+  return [
+    { to: '/', name: rootName },
+    { to: toSubjects() + subject.path + filterParam, name: subject.name },
+    ...topicLinks,
+    ...resourceLink,
+  ];
+}

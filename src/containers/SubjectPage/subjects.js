@@ -9,6 +9,7 @@
 import { handleActions, createAction } from 'redux-actions';
 import { createSelector } from 'reselect';
 import createFetchActions from '../../util/createFetchActions';
+import config from '../../config';
 
 export const fetchSubjectsActions = createFetchActions('SUBJECTS');
 export const setSubjects = createAction('SET_SUBJECTS');
@@ -18,7 +19,7 @@ export const actions = {
   setSubjects,
 };
 
-export const initalState = {
+export const initialState = {
   hasFetched: false,
   fetching: false,
   all: [],
@@ -54,14 +55,19 @@ export default handleActions(
       throw: state => state,
     },
   },
-  initalState,
+  initialState,
 );
 
 const getSubjectsFromState = state => state.subjects;
 
-export const getSubjects = createSelector(
-  [getSubjectsFromState],
-  subjects => subjects.all,
+export const getSubjects = createSelector([getSubjectsFromState], subjects =>
+  // Quick fix for removing MK subject in prod
+  subjects.all.filter(subject => {
+    if (config.isNdlaProdEnvironment) {
+      return subject.id !== 'urn:subject:1';
+    }
+    return true;
+  }),
 );
 
 export const hasFetchSubjectsFailed = createSelector(

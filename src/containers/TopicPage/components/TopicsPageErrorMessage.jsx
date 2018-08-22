@@ -7,28 +7,25 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { OneColumn, ErrorMessage } from 'ndla-ui';
 
-export const TopicPageErrorMessage = ({ fetchTopicsFailed, t }) => (
+export const TopicPageErrorMessage = ({ t }) => (
   <OneColumn>
     <div className="c-article">
       <ErrorMessage
+        illustration={{
+          url: '/static/oops.gif',
+          altText: t('errorMessage.title'),
+        }}
         messages={{
           title: t('errorMessage.title'),
-          description: fetchTopicsFailed
-            ? t('topicPage.topicErrorDescription')
-            : t('topicPage.articleErrorDescription'),
-          back: fetchTopicsFailed ? t('errorMessage.back') : undefined,
-          goToFrontPage: fetchTopicsFailed
-            ? t('errorMessage.goToFrontPage')
-            : undefined,
+          description: t('topicPage.articleErrorDescription'),
+          back: t('errorMessage.back'),
+          goToFrontPage: t('errorMessage.goToFrontPage'),
         }}
       />
     </div>
   </OneColumn>
 );
 
-TopicPageErrorMessage.propTypes = {
-  fetchTopicsFailed: PropTypes.bool.isRequired,
-};
+TopicPageErrorMessage.propTypes = {};

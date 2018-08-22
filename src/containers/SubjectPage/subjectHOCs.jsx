@@ -8,47 +8,65 @@
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import connectSSR from '../../components/connectSSR';
-
-import { actions, getSubjects, hasFetchSubjectsFailed } from './subjects';
+import defined from 'defined';
 import { SubjectShape } from '../../shapes';
+import { subjectsQuery } from '../../queries';
+import config from '../../config';
+import { GraphqlErrorShape } from '../../graphqlShapes';
+import { runQueries } from '../../util/runQueries';
+import handleError from '../../util/handleError';
 
 export const injectSubjects = WrappedComponent => {
   class SubjectsContainer extends Component {
-    static getInitialProps(ctx) {
-      ctx.fetchSubjects();
-    }
-
-    componentDidMount() {
-      SubjectsContainer.getInitialProps(this.props);
+    static async getInitialProps(ctx) {
+      try {
+        return runQueries(ctx.client, [{ query: subjectsQuery }]);
+      } catch (e) {
+        handleError(e);
+        return null;
+      }
     }
 
     render() {
-      return <WrappedComponent {...this.props} />;
+      const { loading, errors } = this.props;
+      if (loading !== false) {
+        return null;
+      }
+
+      const data = defined(this.props.data, {});
+      // Quick fix for removing MK subject in prod
+      const subjects = (data.subjects || []).filter(subject => {
+        if (config.isNdlaProdEnvironment) {
+          return subject.id !== 'urn:subject:1';
+        }
+        return true;
+      });
+
+      const hasFailed = errors !== undefined && errors.length > 0;
+      return (
+        <WrappedComponent
+          {...this.props}
+          subjects={subjects}
+          hasFailed={hasFailed}
+        />
+      );
     }
   }
 
   SubjectsContainer.propTypes = {
-    subjects: PropTypes.arrayOf(SubjectShape).isRequired,
-    hasFailed: PropTypes.bool.isRequired,
-    fetchSubjects: PropTypes.func.isRequired,
+    data: PropTypes.shape({
+      subjects: PropTypes.arrayOf(SubjectShape),
+    }),
+    errors: PropTypes.arrayOf(GraphqlErrorShape),
+    loading: PropTypes.bool,
   };
-
-  const mapStateToProps = state => ({
-    subjects: getSubjects(state),
-    hasFailed: hasFetchSubjectsFailed(state),
-  });
 
   const getDisplayName = component =>
     component.displayName || component.name || 'Component';
-
-  const mapDispatchToProps = {
-    fetchSubjects: actions.fetchSubjects,
-  };
 
   SubjectsContainer.displayName = `InjectSubjects(${getDisplayName(
     WrappedComponent,
   )})`;
 
-  return connectSSR(mapStateToProps, mapDispatchToProps)(SubjectsContainer);
+  return SubjectsContainer;
 };

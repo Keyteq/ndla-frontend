@@ -8,17 +8,21 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import withRouter from 'react-router-dom/withRouter';
 import createHistory from 'history/createBrowserHistory';
 
 import { appLocales } from '../../i18n';
-import { getLocale } from './localeSelectors';
 
-const SelectLocale = ({ locale, location: { pathname, search } }) => {
+const SelectLocale = ({ locale, id }) => {
   const handleChange = newLocale => {
-    const path = pathname.startsWith('/') ? pathname.substring(1) : pathname;
-    createHistory().push(`/${newLocale}/${path}${search}`); // Need create new history or else basename is included
+    const { pathname, search } = window.location;
+    const basePath = pathname.startsWith(`/${locale}/`)
+      ? pathname.replace(`/${locale}/`, '/')
+      : pathname;
+    const newPath =
+      newLocale === 'nb'
+        ? `${basePath}${search}`
+        : `/${newLocale}${basePath}${search}`;
+    createHistory().push(newPath); // Need create new history or else basename is included
     window.location.reload();
   };
   return (
@@ -26,9 +30,11 @@ const SelectLocale = ({ locale, location: { pathname, search } }) => {
       onChange={evt => {
         handleChange(evt.target.value);
       }}
+      data-testid="language-select"
       // autoComplete="off" is need to make the selected attribute work in firefox
       autoComplete="off"
-      value={locale}>
+      value={locale}
+      id={id}>
       {appLocales.map(l => (
         <option key={l.abbreviation} value={l.abbreviation}>
           {l.name}
@@ -39,6 +45,7 @@ const SelectLocale = ({ locale, location: { pathname, search } }) => {
 };
 
 SelectLocale.propTypes = {
+  id: PropTypes.string.isRequired,
   locale: PropTypes.string.isRequired,
   location: PropTypes.shape({
     pathname: PropTypes.string.isRequired,
@@ -46,8 +53,4 @@ SelectLocale.propTypes = {
   }),
 };
 
-const mapStateToProps = state => ({
-  locale: getLocale(state),
-});
-
-export default withRouter(connect(mapStateToProps)(SelectLocale));
+export default SelectLocale;

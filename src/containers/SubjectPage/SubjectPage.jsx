@@ -9,191 +9,212 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
-import {
-  OneColumn,
-  SubjectHero,
-  ErrorMessage,
-  TopicIntroductionList,
-  FilterList,
-} from 'ndla-ui';
-import Link from 'react-router-dom/Link';
-import defined from 'defined';
+import { withRouter } from 'react-router-dom';
+import queryString from 'query-string';
+import Helmet from 'react-helmet';
+import { withApollo } from 'react-apollo';
+import { SubjectHeader, Breadcrumb } from 'ndla-ui';
 import { injectT } from 'ndla-i18n';
-
-import connectSSR from '../../components/connectSSR';
-import { actions } from './subjects';
+import { withTracker } from 'ndla-tracker';
+import { GraphQLSubjectShape, GraphqlErrorShape } from '../../graphqlShapes';
+import { LocationShape } from '../../shapes';
+import { getUrnIdsFromProps, toBreadcrumbItems } from '../../routeHelpers';
+import { subjectPageQuery } from '../../queries';
+import { runQueries } from '../../util/runQueries';
+import handleError from '../../util/handleError';
+import { DefaultErrorMessage } from '../../components/DefaultErrorMessage';
+import SubjectPageSecondaryContent from './components/SubjectPageSecondaryContent';
+import SubjectPageSocialMedia from './components/SubjectPageSocialMedia';
+import SubjectPageOneColumn from './components/SubjectPageOneColumn';
+import SubjectPageTwoColumn from './components/SubjectPageTwoColumn';
+import SubjectEditorChoices from './components/SubjectEditorChoices';
+import { getResources } from './subjectPageHelpers';
+import { toTopicMenu } from '../../util/topicsHelper';
 import {
-  actions as topicActions,
-  getTopicsBySubjectIdWithIntroduction,
-  getTopic,
-  getFetchTopicsStatus,
-} from '../TopicPage/topic';
-import {
-  actions as filterActions,
-  getActiveFilter,
-  getFilters,
-} from '../Filters/filter';
-import { SubjectShape, TopicShape } from '../../shapes';
-import { toTopicPartial } from '../../routeHelpers';
-
-const toTopic = subjectId => toTopicPartial(subjectId);
+  getFiltersFromUrl,
+  getFiltersFromUrlAsArray,
+} from '../../util/filterHelper';
 
 class SubjectPage extends Component {
-  static getInitialProps(ctx) {
-    const {
-      match: { params: { subjectId } },
-      fetchTopicsWithIntroductions,
-      fetchSubjects,
-      fetchSubjectFilters,
-    } = ctx;
-    fetchSubjects();
-    fetchSubjectFilters(subjectId);
-    fetchTopicsWithIntroductions({ subjectId });
-  }
-
-  componentDidMount() {
-    SubjectPage.getInitialProps(this.props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {
-      match: { params: { subjectId } },
-      fetchTopicsWithIntroductions,
-    } = this.props;
-
-    if (nextProps.match.params.subjectId !== subjectId) {
-      fetchTopicsWithIntroductions({
-        subjectId: nextProps.match.params.subjectId,
-      });
+  static willTrackPageView(trackPageView, currentProps) {
+    const { data } = currentProps;
+    if (
+      data &&
+      data.subject &&
+      data.subject.topics &&
+      data.subject.topics.length > 0
+    ) {
+      trackPageView(currentProps);
     }
   }
 
-  handleFilterClick = e => {
-    const {
-      match: { params: { subjectId } },
-      filters,
-      setActiveFilter,
-    } = this.props;
-    const filterId = filters.find(it => it.name === e.target.id).id;
-    setActiveFilter({ filterId, subjectId });
+  static getDocumentTitle({ t, data }) {
+    return `${data && data.subject ? data.subject.name : ''} ${t(
+      'htmlTitles.titleTemplate',
+    )}`;
+  }
+
+  static async getInitialProps(ctx) {
+    const { client, location } = ctx;
+    const { subjectId } = getUrnIdsFromProps(ctx);
+    try {
+      return runQueries(client, [
+        {
+          query: subjectPageQuery,
+          variables: { subjectId, filterIds: getFiltersFromUrl(location) },
+        },
+      ]);
+    } catch (error) {
+      handleError(error);
+      return null;
+    }
+  }
+
+  handleFilterClick = newValues => {
+    const { history } = this.props;
+    const searchString = `?${queryString.stringify({
+      filters: newValues.join(','),
+    })}`;
+    history.push(
+      newValues.length > 0
+        ? {
+            search: searchString,
+          }
+        : {},
+    );
   };
 
   render() {
     const {
-      subjectTopics,
+      data,
+      loading,
+      match: {
+        params: { subjectId },
+      },
+      location,
       t,
-      topic,
-      match,
-      hasFailed,
-      filters,
-      activeFilters,
     } = this.props;
-    const { params: { subjectId } } = match;
 
-    const topics = topic ? defined(topic.subtopics, []) : subjectTopics;
+    if (loading && (!data || !data.subject)) {
+      return null;
+    }
+
+    if (!data || !data.subject) {
+      return <DefaultErrorMessage />;
+    }
+    const activeFilters = getFiltersFromUrlAsArray(location);
+    const { subject } = data;
+    const { name: subjectName, filters: subjectFilters } = subject;
+
+    const subjectpage =
+      subject && subject.subjectpage ? subject.subjectpage : {};
+
+    const {
+      latestContent,
+      facebook,
+      twitter,
+      banner,
+      editorsChoices,
+      displayInTwoColumns,
+    } = subjectpage;
+
+    const latestContentResources = getResources(latestContent);
+    const filters = subjectFilters.map(filter => ({
+      ...filter,
+      title: filter.name,
+      value: filter.id,
+    }));
+    const topicsWithSubTopics =
+      subject && subject.topics
+        ? subject.topics
+            .filter(
+              topic => !topic || !topic.parent || topic.parent === subject.id,
+            )
+            .map(topic => toTopicMenu(topic, subject.topics))
+        : [];
+
+    const breadcrumb = subject ? (
+      <Breadcrumb
+        items={toBreadcrumbItems(
+          t('breadcrumb.toFrontpage'),
+          subject,
+          undefined,
+          undefined,
+        )}
+      />
+    ) : (
+      undefined
+    );
     return (
-      <div>
-        <SubjectHero>
-          <OneColumn cssModifier="narrow">
-            <div className="c-hero__content">
-              <section>
-                <div className="c-breadcrumb">
-                  <ol className="c-breadcrumb__list">
-                    <li className="c-breadcrumb__item">
-                      <Link to="/">{t('breadcrumb.subjectsLinkText')}</Link> ›
-                    </li>
-                  </ol>
-                </div>
-              </section>
-            </div>
-          </OneColumn>
-        </SubjectHero>
-        <OneColumn>
-          <article className="c-article">
-            <section className="u-4/6@desktop u-push-1/6@desktop">
-              <FilterList
-                filterContent={filters.map(filt => ({
-                  ...filt,
-                  title: filt.name,
-                  active: !!activeFilters.find(actId => actId === filt.id),
-                }))}
-                onClick={this.handleFilterClick}
-              />
-              {hasFailed ? (
-                <ErrorMessage
-                  messages={{
-                    title: t('errorMessage.title'),
-                    description: t('subjectPage.errorDescription'),
-                    back: t('errorMessage.back'),
-                    goToFrontPage: t('errorMessage.goToFrontPage'),
-                  }}
-                />
-              ) : (
-                <div className="c-resources">
-                  <h1 className="c-resources__title">
-                    {t('subjectPage.tabs.topics')}
-                  </h1>
-                  <TopicIntroductionList
-                    toTopic={toTopic(subjectId)}
-                    topics={
-                      activeFilters.length === 0
-                        ? topics
-                        : topics.filter(
-                            top =>
-                              top.filter &&
-                              !activeFilters.find(
-                                active => top.filter.indexOf(active) === -1,
-                              ),
-                          )
-                    }
-                  />
-                </div>
-              )}
-            </section>
-          </article>
-        </OneColumn>
-      </div>
+      <article>
+        <Helmet>
+          <title>{`${this.constructor.getDocumentTitle(this.props)}`}</title>
+        </Helmet>
+        <SubjectHeader
+          heading={subjectName || ''}
+          images={[
+            {
+              url: banner ? banner.desktopUrl : '',
+              types: ['wide', 'desktop', 'tablet'],
+            },
+            { url: banner ? banner.mobileUrl : '', types: ['mobile'] },
+          ]}
+        />
+        {displayInTwoColumns ? (
+          <SubjectPageTwoColumn
+            subjectId={subjectId}
+            subjectpage={subjectpage}
+            topics={topicsWithSubTopics}
+            breadcrumb={breadcrumb}
+            filters={filters}
+            activeFilters={activeFilters}
+            handleFilterClick={this.handleFilterClick}
+          />
+        ) : (
+          <SubjectPageOneColumn
+            subjectId={subjectId}
+            subjectpage={subjectpage}
+            topics={topicsWithSubTopics}
+            breadcrumb={breadcrumb}
+            filters={filters}
+            activeFilters={activeFilters}
+            handleFilterClick={this.handleFilterClick}
+          />
+        )}
+        <SubjectEditorChoices wideScreen editorsChoices={editorsChoices} />
+        {latestContent && (
+          <SubjectPageSecondaryContent
+            subjectName={subjectName}
+            latestContentResources={latestContentResources}
+          />
+        )}
+        <SubjectPageSocialMedia twitter={twitter} facebook={facebook} />
+      </article>
     );
   }
 }
 
 SubjectPage.propTypes = {
+  history: PropTypes.shape({
+    push: PropTypes.func.isRequired,
+  }).isRequired,
+  data: PropTypes.shape({
+    subject: GraphQLSubjectShape,
+    error: GraphqlErrorShape,
+  }),
+  location: LocationShape,
   match: PropTypes.shape({
     params: PropTypes.shape({
       subjectId: PropTypes.string.isRequired,
       topicId: PropTypes.string,
     }).isRequired,
   }).isRequired,
-  fetchTopicsWithIntroductions: PropTypes.func.isRequired,
-  fetchSubjects: PropTypes.func.isRequired,
-  hasFailed: PropTypes.bool.isRequired,
-  subjectTopics: PropTypes.arrayOf(TopicShape).isRequired,
-  subject: SubjectShape,
-  topic: TopicShape,
-  filters: PropTypes.arrayOf(PropTypes.object),
-  setActiveFilter: PropTypes.func,
-  activeFilters: PropTypes.arrayOf(PropTypes.string),
-};
-
-const mapDispatchToProps = {
-  fetchSubjects: actions.fetchSubjects,
-  fetchSubjectFilters: filterActions.fetchSubjectFilters,
-  fetchTopicsWithIntroductions: topicActions.fetchTopicsWithIntroductions,
-  setActiveFilter: filterActions.setActive,
-};
-
-const mapStateToProps = (state, ownProps) => {
-  const { subjectId, topicId } = ownProps.match.params;
-  return {
-    topic: topicId ? getTopic(subjectId, topicId)(state) : undefined,
-    subjectTopics: getTopicsBySubjectIdWithIntroduction(subjectId)(state),
-    hasFailed: getFetchTopicsStatus(state) === 'error',
-    filters: getFilters(subjectId)(state),
-    activeFilters: getActiveFilter(subjectId)(state) || [],
-  };
+  loading: PropTypes.bool.isRequired,
 };
 
 export default compose(
-  connectSSR(mapStateToProps, mapDispatchToProps),
+  withRouter,
   injectT,
+  withTracker,
+  withApollo,
 )(SubjectPage);

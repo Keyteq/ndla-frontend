@@ -1,0 +1,53 @@
+/**
+ * Copyright (c) 2016-present, NDLA.
+ *
+ * This source code is licensed under the GPLv3 license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+@import '../../node_modules/normalize-css/normalize.css';
+@import 'vars.css';
+@import '../../node_modules/ndla-ui/lib/main.css';
+@import 'forms.css';
+@import 'search.css';
+@import 'alert.css';
+
+.article-old-ndla-link:any-link {
+  &:any-link {
+    font-size: 0.8333rem;
+    color: black;
+  }
+  &:hover {
+    color: #20588f;
+  }
+}
+
+.c-topic-resource__item--hidden {
+  display: none;
+}
+
+.MJXc-display {
+  display: inline-block !important;
+}
+
+.c-article .MJXc-display {
+  margin: 0;
+
+  & .mjx-chtml {
+    padding: 0;
+  }
+}
+
+.c-zendesk__button {
+  position: fixed;
+  left: 2rem;
+  bottom: 2rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 2px;
+  background-color: white;
+}
+
+.zEWidget-launcher {
+  display: none;
+}

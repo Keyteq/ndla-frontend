@@ -1,0 +1,195 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IframeArticlePage displays error message on status === error 1`] = `
+<div
+  className="o-container"
+>
+  <div
+    className="o-wrapper o-wrapper--clear undefined"
+  >
+    <article
+      className="c-error-message"
+    >
+      <img
+        alt="Ops, noe gikk galt"
+        className="c-error-message__illustration"
+        src="/static/oops.gif"
+      />
+      <h1>
+        Ops, noe gikk galt
+      </h1>
+      <p
+        className="c-error-message__description"
+      >
+        Beklager, en feil oppsto.
+      </p>
+    </article>
+  </div>
+</div>
+`;
+
+exports[`IframeArticlePage renderers correctly 1`] = `
+<div
+  className="o-container"
+>
+  <div
+    className="o-wrapper undefined"
+  >
+    <article
+      className="c-article c-article--clean c-article--iframe"
+    >
+      <section
+        className="u-4/6@desktop u-push-1/6@desktop u-10/12@tablet u-push-1/12@tablet"
+      >
+        <div
+          className="c-article__header"
+        >
+          <div
+            className="c-article__title"
+          >
+            <h1>
+              Politiske skillelinjer
+            </h1>
+          </div>
+          <p
+            className="article_introduction"
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "Politiske skillelinjer, eller konfliktlinjer, er varige og grunnleggende motsetninger i samfunnet og blant velgerne. Du synes kanskje det er vanskelig å se forskjell på de politiske partiene – det er du i så fall ikke alene om!",
+              }
+            }
+          />
+          <div
+            className="c-article-byline"
+          >
+            <span
+              className="c-article-byline__flex"
+            >
+              <span
+                className="c-article-byline__icon"
+              >
+                <svg
+                  className="c-icon"
+                  data-license="Apache License 2.0"
+                  data-source="Material Design"
+                  fill="currentColor"
+                  height="1em"
+                  preserveAspectRatio="xMidYMid meet"
+                  style={
+                    Object {
+                      "color": undefined,
+                      "verticalAlign": "middle",
+                    }
+                  }
+                  viewBox="0 0 48 48"
+                  width="1em"
+                >
+                  <title>
+                    User
+                  </title>
+                  <g>
+                    <path
+                      d="M24 24c4.42 0 8-3.59 8-8 0-4.42-3.58-8-8-8s-8 3.58-8 8c0 4.41 3.58 8 8 8zm0 4c-5.33 0-16 2.67-16 8v4h32v-4c0-5.33-10.67-8-16-8z"
+                    />
+                  </g>
+                </svg>
+              </span>
+              <span
+                className="c-article-byline__authors"
+              >
+                Someone 
+                (
+                CC BY-SA
+                )
+              </span>
+            </span>
+            <span
+              className="c-article-byline__flex"
+            >
+              <span
+                className="c-article-byline__icon"
+              >
+                <svg
+                  className="c-icon"
+                  data-license="Apache License 2.0"
+                  data-source="Material Design"
+                  fill="currentColor"
+                  height="1em"
+                  preserveAspectRatio="xMidYMid meet"
+                  style={
+                    Object {
+                      "color": undefined,
+                      "verticalAlign": "middle",
+                    }
+                  }
+                  viewBox="0 0 48 48"
+                  width="1em"
+                >
+                  <title>
+                    Time
+                  </title>
+                  <g>
+                    <path
+                      d="M23.99 4C12.94 4 4 12.95 4 24s8.94 20 19.99 20C35.04 44 44 35.05 44 24S35.04 4 23.99 4zM24 40c-8.84 0-16-7.16-16-16S15.16 8 24 8s16 7.16 16 16-7.16 16-16 16zm1-26h-3v12l10.49 6.3L34 29.84l-9-5.34z"
+                    />
+                  </g>
+                </svg>
+              </span>
+              <span
+                className="c-article-byline__date"
+              >
+                Sist oppdatert
+                 
+                09.01.2018
+              </span>
+            </span>
+            <span
+              className="c-article-byline__flex"
+            >
+              <div
+                onToggle={null}
+              >
+                <button
+                  className="c-button c-button--link c-article-byline__toggle-use-article"
+                  disabled={false}
+                  onClick={[Function]}
+                  type="button"
+                >
+                  Bruk innhold
+                </button>
+                <div />
+              </div>
+            </span>
+          </div>
+        </div>
+      </section>
+      <section
+        className="u-4/6@desktop u-push-1/6@desktop u-10/12@tablet u-push-1/12@tablet"
+      >
+        <div
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "<section><p>Dersom du leser de ulike partiprogrammene, ser du fort at partiene har ulike svar både på hva som er viktige utfordringer, og på hvordan de skal løses.</p></section>",
+            }
+          }
+        />
+      </section>
+      <section
+        className="u-4/6@desktop u-push-1/6@desktop u-10/12@tablet u-push-1/12@tablet"
+      />
+      <section
+        className="u-10/12@desktop u-push-1/12@desktop u-10/12@tablet u-push-1/12@tablet"
+      >
+        <a
+          className="article-old-ndla-link"
+          href="//red.ndla.no/node/168554"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Gå til orginal artikkel
+        </a>
+      </section>
+    </article>
+  </div>
+</div>
+`;

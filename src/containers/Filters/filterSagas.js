@@ -6,41 +6,26 @@
  *
  */
 
-import { take, call, put, select, takeEvery } from 'redux-saga/effects';
-import { actions, filterHasFetched } from './filter';
+import { take, call, put } from 'redux-saga/effects';
+import { actions } from './filter';
 import * as api from './filterApi';
 import { applicationError } from '../../modules/error';
-import { fetchTopicsFiltered } from '../TopicPage/topicSagas';
 
-export function* fetchFilters(id) {
+export function* fetchFilters() {
   try {
-    const filters = yield call(api.fetchSubjectFilters, id);
-    yield put(actions.fetchSubjectFiltersSuccess({ id, filters }));
+    const filters = yield call(api.fetchFilters);
+    yield put(actions.fetchFiltersSuccess({ filters }));
   } catch (error) {
     yield put(applicationError(error));
-    yield put(actions.fetchSubjectFiltersError());
+    yield put(actions.fetchFiltersError());
   }
-}
-
-export function* watchFetchFilteredTopics() {
-  yield takeEvery(actions.fetchFilteredTopics, fetchTopicsFiltered);
 }
 
 export function* watchFetchFilters() {
   while (true) {
-    const { payload } = yield take(actions.fetchSubjectFilters);
+    const { payload } = yield take(actions.fetchFilters);
     yield call(fetchFilters, payload);
   }
 }
 
-export function* watchSetActive() {
-  while (true) {
-    const { payload: { subjectId, filterId } } = yield take(actions.setActive);
-    const hasFetched = yield select(filterHasFetched({ subjectId, filterId }));
-    if (!hasFetched) {
-      yield put(actions.fetchFilteredTopics({ subjectId, filterId }));
-    }
-  }
-}
-
-export default [watchFetchFilters, watchSetActive, watchFetchFilteredTopics];
+export default [watchFetchFilters];

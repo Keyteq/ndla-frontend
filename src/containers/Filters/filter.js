@@ -6,27 +6,43 @@
  *
  */
 
-import { handleActions, createAction } from 'redux-actions';
+import { handleActions } from 'redux-actions';
 import { createSelector } from 'reselect';
 import createFetchActions from '../../util/createFetchActions';
 
-export const fetchSubjectFiltersActions = createFetchActions('SUBJECT_FILTERS');
-export const fetchFilteredTopics = createAction('FETCH_FILTERED_TOPICS');
+export const fetchFiltersActions = createFetchActions('FILTERS');
 export const actions = {
-  ...fetchSubjectFiltersActions,
-  fetchFilteredTopics,
-  setActive: createAction('SET_ACTIVE'),
+  ...fetchFiltersActions,
 };
 
 export const initialState = {
   loadingFilters: false,
   all: {},
-  active: {},
   hasFailed: false,
 };
 
 export default handleActions(
   {
+    [actions.fetchFilters]: {
+      next: state => ({
+        ...state,
+        loadingFilters: true,
+      }),
+    },
+    [actions.fetchFiltersSuccess]: {
+      next: (state, { payload: { filters } }) => ({
+        ...state,
+        loadingFilters: false,
+        all: { ...state.all, filters },
+      }),
+    },
+    [actions.fetchFiltersError]: {
+      next: state => ({
+        ...state,
+        loadingFilters: false,
+        hasFailed: true,
+      }),
+    },
     [actions.fetchSubjectFilters]: {
       next: state => ({
         ...state,
@@ -59,31 +75,30 @@ export default handleActions(
         },
       }),
     },
-    [actions.setActive]: {
-      next: (state, { payload: { filterId, subjectId } }) => {
-        const arr = state.active[subjectId] || [];
-        return {
-          ...state,
-          active: {
-            ...state.active,
-            [subjectId]: arr.find(it => it === filterId)
-              ? arr.filter(it => it !== filterId)
-              : [...arr, filterId],
-          },
-        };
-      },
-    },
   },
   initialState,
 );
 
 const getState = state => state.filters;
 
-export const getActiveFilter = subjectId =>
-  createSelector([getState], state => state.active[subjectId]);
+const getFilterFromField = (filters, field) =>
+  filters.all[field]
+    ? filters.all[field].map(filt => ({
+        ...filt,
+        title: filt.name,
+        value: filt.id,
+      }))
+    : [];
 
 export const getFilters = subjectId =>
-  createSelector([getState], state => state.all[subjectId] || []);
+  createSelector([getState], state => getFilterFromField(state, subjectId));
+
+export const getMultipeSubjectFilters = subjects =>
+  createSelector([getState], state =>
+    getFilterFromField(state, 'filters').filter(
+      filter => subjects.indexOf(filter.subjectId) !== -1,
+    ),
+  );
 
 export const filterHasFetched = ({ subjectId, filterId }) =>
   createSelector(

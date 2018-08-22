@@ -11,27 +11,35 @@ import PropTypes from 'prop-types';
 import defined from 'defined';
 import { injectT } from 'ndla-i18n';
 import { Hero, OneColumn, Breadcrumb } from 'ndla-ui';
+import { withRouter } from 'react-router-dom';
+import getContentTypeFromResourceTypes from '../../../util/getContentTypeFromResourceTypes';
+import { toBreadcrumbItems } from '../../../routeHelpers';
+import {
+  ResourceTypeShape,
+  SubjectShape,
+  TopicShape,
+  LocationShape,
+} from '../../../shapes';
+import { getFiltersFromUrl } from '../../../util/filterHelper';
 
-import getContentTypeFromResourceTypes from '../../../components/getContentTypeFromResourceTypes';
-import { toTopic } from '../../../routeHelpers';
-import { ResourceTypeShape, SubjectShape, TopicShape } from '../../../shapes';
-
-const ArticleHero = ({ article, subject, topicPath, t }) => {
+const ArticleHero = ({ resource, subject, topicPath, location, t }) => {
   const resourceTypeMetaData = getContentTypeFromResourceTypes(
-    defined(article.resourceTypes, []),
+    defined(resource.resourceTypes, []),
   );
   return (
     <Hero contentType={resourceTypeMetaData.contentType}>
-      <OneColumn cssModifier="narrow">
+      <OneColumn>
         <div className="c-hero__content">
           <section>
             {subject ? (
               <Breadcrumb
-                toSubjects={() => '/'}
-                subjectsTitle={t('breadcrumb.subjectsLinkText')}
-                subject={subject}
-                topicPath={topicPath}
-                toTopic={toTopic}
+                items={toBreadcrumbItems(
+                  t('breadcrumb.toFrontpage'),
+                  subject,
+                  topicPath,
+                  resource,
+                  getFiltersFromUrl(location),
+                )}
               />
             ) : null}
           </section>
@@ -42,10 +50,11 @@ const ArticleHero = ({ article, subject, topicPath, t }) => {
 };
 
 ArticleHero.propTypes = {
-  article: PropTypes.shape({
+  resource: PropTypes.shape({
     resourceTypes: PropTypes.arrayOf(ResourceTypeShape),
   }).isRequired,
   subject: SubjectShape,
   topicPath: PropTypes.arrayOf(TopicShape),
+  location: LocationShape,
 };
-export default injectT(ArticleHero);
+export default withRouter(injectT(ArticleHero));

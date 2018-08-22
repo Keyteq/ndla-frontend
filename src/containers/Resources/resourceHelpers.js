@@ -9,10 +9,6 @@
 import config from '../../config';
 import { toArticle } from '../../routeHelpers';
 
-const LEARNING_PATH_DOMAIN =
-  __SERVER__ || process.env.NODE_ENV === 'unittest'
-    ? config.learningPathDomain
-    : window.config.learningPathDomain;
 export const URN_ARTICLE = 'urn:article:';
 export const URN_LEARTNING_PATH = 'urn:learningpath:';
 
@@ -40,18 +36,24 @@ export const getLearningPathIdFromResource = resource => {
   return undefined;
 };
 
-export const resourceToLinkProps = resource => {
+export const resourceToLinkProps = (resource, subjectTopicPath, filters) => {
   if (isLearningPathResource(resource)) {
     return {
-      href: `${LEARNING_PATH_DOMAIN}/learningpaths/${getLearningPathIdFromResource(
-        resource,
-      )}`,
+      to: `${
+        config.learningPathDomain
+      }/learningpaths/${getLearningPathIdFromResource(resource)}/first-step`,
       target: '_blank',
       rel: 'noopener noreferrer',
     };
-  } else if (isArticleResource(resource)) {
+  }
+  if (isArticleResource(resource)) {
     return {
-      to: toArticle(getArticleIdFromResource(resource), resource),
+      to: toArticle(
+        getArticleIdFromResource(resource),
+        resource,
+        subjectTopicPath,
+        filters,
+      ),
     };
   }
   return { to: '/404' };

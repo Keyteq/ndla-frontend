@@ -24,11 +24,11 @@ const filters = [
 
 test('filters are fetched', () => {
   nock('http://ndla-api')
-    .get('/taxonomy/v1/subjects/urn:subject:1/filters')
+    .get('/taxonomy/v1/filters')
     .reply(200, filters);
 
   return expectSaga(sagas.watchFetchFilters)
-    .put(actions.fetchSubjectFiltersSuccess({ id: 'urn:subject:1', filters }))
-    .dispatch(actions.fetchSubjectFilters('urn:subject:1'))
+    .put(actions.fetchFiltersSuccess({ filters }))
+    .dispatch(actions.fetchFilters())
     .run({ silenceTimeout: true });
 });

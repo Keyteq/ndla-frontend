@@ -6,29 +6,52 @@
  *
  */
 
+import 'isomorphic-unfetch';
 import './raf-polyfill';
 
 /* eslint-disable */
 
 import { expectSaga } from 'redux-saga-test-plan';
-import { configure } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
 
 global.__CLIENT__ = false;
 global.__SERVER__ = true;
 
+// fix: `matchMedia` not present, legacy browsers require a polyfill
+global.matchMedia =
+  global.matchMedia ||
+  function() {
+    return {
+      matches: false,
+      addListener() {},
+      removeListener() {},
+    };
+  };
+
 /* eslint-enable */
 
-window.config = {
-  ndlaApiUrl: 'http://ndla-api',
+window.DATA = {
+  config: {
+    ndlaApiUrl: 'http://ndla-api',
+  },
 };
+
+// polyfill for jsdom
+window.matchMedia =
+  window.matchMedia ||
+  function matchMedia() {
+    return {
+      matches: false,
+      addListener() {},
+      removeListener() {},
+    };
+  };
+
+jest.mock('../style/index.css', () => {});
 
 global.DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT
   ? parseInt(process.env.DEFAULT_TIMEOUT, 10)
-  : 100;
+  : 250;
 expectSaga.DEFAULT_TIMEOUT = global.DEFAULT_TIMEOUT;
-
-configure({ adapter: new Adapter() });
 
 const localStorageMock = (function createLocalStorage() {
   let store = {};
